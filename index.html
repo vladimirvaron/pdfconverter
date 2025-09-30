@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VandG Converter PDF</title>
+    <style>
+        body {
+            box-sizing: border-box;
+        }
+    </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf2pic/2.1.4/pdf2pic.min.js"></script>
+</head>
+<body class="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 font-sans">
+    <div class="container mx-auto px-4 py-8 max-w-4xl">
+        <!-- Header -->
+        <div class="text-center mb-12">
+            <h1 class="text-4xl font-bold text-gray-800 mb-4">
+                <span class="text-blue-600">VandG</span> Converter PDF
+            </h1>
+            <p class="text-gray-600 text-lg">Convierte PDF a imágenes o imágenes a PDF de forma rápida y sencilla</p>
+        </div>
+
+        <!-- Conversion Mode Selector -->
+        <div class="bg-white rounded-xl shadow-lg p-6 mb-8">
+            <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                <button id="pdfToImagesBtn" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-4 px-6 rounded-lg transition-colors duration-200 flex items-center justify-center gap-3">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                    </svg>
+                    PDF a Imágenes
+                </button>
+                <button id="imagesToPdfBtn" class="flex-1 bg-green-600 hover:bg-green-700 text-white font-semibold py-4 px-6 rounded-lg transition-colors duration-200 flex items-center justify-center gap-3">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                    </svg>
+                    Imágenes a PDF
+                </button>
+            </div>
+        </div>
+
+        <!-- PDF to Images Section -->
+        <div id="pdfToImagesSection" class="bg-white rounded-xl shadow-lg p-8 mb-8">
+            <h2 class="text-2xl font-bold text-gray-800 mb-6 flex items-center gap-3">
+                <svg class="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                </svg>
+                Convertir PDF a Imágenes
+            </h2>
+            
+            <div class="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center mb-6 hover:border-blue-400 transition-colors duration-200" id="pdfDropZone">
+                <svg class="mx-auto h-12 w-12 text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
+                </svg>
+                <p class="text-gray-600 mb-2">Arrastra tu archivo PDF aquí o</p>
+                <button class="bg-blue-100 hover:bg-blue-200 text-blue-700 font-medium py-2 px-4 rounded-lg transition-colors duration-200" onclick="document.getElementById('pdfFileInput').click()">
+                    Seleccionar archivo
+                </button>
+                <input type="file" id="pdfFileInput" accept=".pdf" class="hidden">
+            </div>
+
+            <div class="flex flex-col sm:flex-row gap-4 mb-6">
+                <div class="flex-1">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Formato de salida</label>
+                    <select id="imageFormat" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        <option value="png">PNG (Mejor calidad)</option>
+                        <option value="jpeg">JPEG (Menor tamaño)</option>
+                    </select>
+                </div>
+                <div class="flex-1">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Calidad (JPEG)</label>
+                    <select id="imageQuality" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        <option value="0.9">Alta (90%)</option>
+                        <option value="0.7">Media (70%)</option>
+                        <option value="0.5">Baja (50%)</option>
+                    </select>
+                </div>
+            </div>
+
+            <button id="convertPdfBtn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors duration-200 disabled:bg-gray-400 disabled:cursor-not-allowed" disabled>
+                Convertir PDF a Imágenes
+            </button>
+
+            <div id="pdfProgress" class="hidden mt-4">
+                <div class="bg-gray-200 rounded-full h-2">
+                    <div id="pdfProgressBar" class="bg-blue-600 h-2 rounded-full transition-all duration-300" style="width: 0%"></div>
+                </div>
+                <p class="text-sm text-gray-600 mt-2 text-center">Procesando PDF...</p>
+            </div>
+
+            <div id="pdfResults" class="hidden mt-6">
+                <h3 class="text-lg font-semibold text-gray-800 mb-4">Imágenes generadas:</h3>
+                <div id="pdfImageGrid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4"></div>
+                <button id="downloadAllImages" class="mt-4 w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors duration-200">
+                    Descargar todas las imágenes (ZIP)
+                </button>
+            </div>
+        </div>
+
+        <!-- Images to PDF Section -->
+        <div id="imagesToPdfSection" class="bg-white rounded-xl shadow-lg p-8 hidden">
+            <h2 class="text-2xl font-bold text-gray-800 mb-6 flex items-center gap-3">
+                <svg class="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                </svg>
+                Convertir Imágenes a PDF
+            </h2>
+            
+            <div class="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center mb-6 hover:border-green-400 transition-colors duration-200" id="imagesDropZone">
+                <svg class="mx-auto h-12 w-12 text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
+                </svg>
+                <p class="text-gray-600 mb-2">Arrastra tus imágenes aquí o</p>
+                <button class="bg-green-100 hover:bg-green-200 text-green-700 font-medium py-2 px-4 rounded-lg transition-colors duration-200" onclick="document.getElementById('imagesFileInput').click()">
+                    Seleccionar imágenes
+                </button>
+                <input type="file" id="imagesFileInput" accept="image/*" multiple class="hidden">
+                <p class="text-xs text-gray-500 mt-2">Formatos soportados: JPG, PNG, GIF, BMP</p>
+            </div>
+
+            <div class="flex flex-col sm:flex-row gap-4 mb-6">
+                <div class="flex-1">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Tamaño de página</label>
+                    <select id="pageSize" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500 focus:border-transparent">
+                        <option value="a4">A4 (210 × 297 mm)</option>
+                        <option value="letter">Carta (216 × 279 mm)</option>
+                        <option value="a3">A3 (297 × 420 mm)</option>
+                        <option value="custom">Ajustar a imagen</option>
+                    </select>
+                </div>
+                <div class="flex-1">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Orientación</label>
+                    <select id="orientation" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500 focus:border-transparent">
+                        <option value="portrait">Vertical</option>
+                        <option value="landscape">Horizontal</option>
+                    </select>
+                </div>
+            </div>
+
+            <div id="imagePreview" class="hidden mb-6">
+                <h3 class="text-lg font-semibold text-gray-800 mb-4">Imágenes seleccionadas:</h3>
+                <div id="imageList" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 mb-4"></div>
+                <p class="text-sm text-gray-600">Arrastra las imágenes para reordenarlas</p>
+            </div>
+
+            <button id="convertImagesBtn" class="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors duration-200 disabled:bg-gray-400 disabled:cursor-not-allowed" disabled>
+                Convertir a PDF
+            </button>
+
+            <div id="imagesProgress" class="hidden mt-4">
+                <div class="bg-gray-200 rounded-full h-2">
+                    <div id="imagesProgressBar" class="bg-green-600 h-2 rounded-full transition-all duration-300" style="width: 0%"></div>
+                </div>
+                <p class="text-sm text-gray-600 mt-2 text-center">Creando PDF...</p>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="text-center mt-12 text-gray-500">
+            <p>&copy; 2024 VandG Converter PDF. Procesamiento local y seguro.</p>
+        </div>
+    </div>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        // Variables globales
+        let selectedImages = [];
+        let currentMode = 'pdfToImages';
+
+        // Elementos del DOM
+        const pdfToImagesBtn = document.getElementById('pdfToImagesBtn');
+        const imagesToPdfBtn = document.getElementById('imagesToPdfBtn');
+        const pdfToImagesSection = document.getElementById('pdfToImagesSection');
+        const imagesToPdfSection = document.getElementById('imagesToPdfSection');
+        const pdfFileInput = document.getElementById('pdfFileInput');
+        const imagesFileInput = document.getElementById('imagesFileInput');
+        const convertPdfBtn = document.getElementById('convertPdfBtn');
+        const convertImagesBtn = document.getElementById('convertImagesBtn');
+
+        // Cambio de modo
+        pdfToImagesBtn.addEventListener('click', () => {
+            currentMode = 'pdfToImages';
+            pdfToImagesSection.classList.remove('hidden');
+            imagesToPdfSection.classList.add('hidden');
+            pdfToImagesBtn.classList.add('bg-blue-600', 'hover:bg-blue-700');
+            pdfToImagesBtn.classList.remove('bg-gray-300');
+            imagesToPdfBtn.classList.remove('bg-green-600', 'hover:bg-green-700');
+            imagesToPdfBtn.classList.add('bg-gray-300');
+        });
+
+        imagesToPdfBtn.addEventListener('click', () => {
+            currentMode = 'imagesToPdf';
+            imagesToPdfSection.classList.remove('hidden');
+            pdfToImagesSection.classList.add('hidden');
+            imagesToPdfBtn.classList.add('bg-green-600', 'hover:bg-green-700');
+            imagesToPdfBtn.classList.remove('bg-gray-300');
+            pdfToImagesBtn.classList.remove('bg-blue-600', 'hover:bg-blue-700');
+            pdfToImagesBtn.classList.add('bg-gray-300');
+        });
+
+        // Drag and drop para PDF
+        const pdfDropZone = document.getElementById('pdfDropZone');
+        pdfDropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            pdfDropZone.classList.add('border-blue-400', 'bg-blue-50');
+        });
+
+        pdfDropZone.addEventListener('dragleave', () => {
+            pdfDropZone.classList.remove('border-blue-400', 'bg-blue-50');
+        });
+
+        pdfDropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            pdfDropZone.classList.remove('border-blue-400', 'bg-blue-50');
+            const files = e.dataTransfer.files;
+            if (files.length > 0 && files[0].type === 'application/pdf') {
+                handlePdfFile(files[0]);
+            }
+        });
+
+        // Drag and drop para imágenes
+        const imagesDropZone = document.getElementById('imagesDropZone');
+        imagesDropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            imagesDropZone.classList.add('border-green-400', 'bg-green-50');
+        });
+
+        imagesDropZone.addEventListener('dragleave', () => {
+            imagesDropZone.classList.remove('border-green-400', 'bg-green-50');
+        });
+
+        imagesDropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            imagesDropZone.classList.remove('border-green-400', 'bg-green-50');
+            const files = Array.from(e.dataTransfer.files).filter(file => file.type.startsWith('image/'));
+            if (files.length > 0) {
+                handleImageFiles(files);
+            }
+        });
+
+        // Manejo de archivos
+        pdfFileInput.addEventListener('change', (e) => {
+            if (e.target.files.length > 0) {
+                handlePdfFile(e.target.files[0]);
+            }
+        });
+
+        imagesFileInput.addEventListener('change', (e) => {
+            if (e.target.files.length > 0) {
+                handleImageFiles(Array.from(e.target.files));
+            }
+        });
+
+        function handlePdfFile(file) {
+            convertPdfBtn.disabled = false;
+            convertPdfBtn.textContent = `Convertir "${file.name}"`;
+            convertPdfBtn.dataset.file = file.name;
+            
+            // Simular procesamiento del PDF
+            convertPdfBtn.addEventListener('click', () => {
+                simulatePdfConversion(file);
+            });
+        }
+
+        function handleImageFiles(files) {
+            selectedImages = files;
+            convertImagesBtn.disabled = false;
+            convertImagesBtn.textContent = `Convertir ${files.length} imagen(es) a PDF`;
+            
+            // Mostrar preview de imágenes
+            showImagePreview(files);
+        }
+
+        function showImagePreview(files) {
+            const imagePreview = document.getElementById('imagePreview');
+            const imageList = document.getElementById('imageList');
+            imageList.innerHTML = '';
+            
+            files.forEach((file, index) => {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const div = document.createElement('div');
+                    div.className = 'relative group cursor-move';
+                    div.innerHTML = `
+                        <img src="${e.target.result}" alt="Imagen ${index + 1}" class="w-full h-24 object-cover rounded-lg border-2 border-gray-200 group-hover:border-green-400 transition-colors">
+                        <div class="absolute top-1 right-1 bg-green-600 text-white text-xs rounded-full w-6 h-6 flex items-center justify-center">${index + 1}</div>
+                        <button onclick="removeImage(${index})" class="absolute top-1 left-1 bg-red-500 hover:bg-red-600 text-white text-xs rounded-full w-6 h-6 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">×</button>
+                    `;
+                    imageList.appendChild(div);
+                };
+                reader.readAsDataURL(file);
+            });
+            
+            imagePreview.classList.remove('hidden');
+        }
+
+        function removeImage(index) {
+            selectedImages.splice(index, 1);
+            if (selectedImages.length === 0) {
+                document.getElementById('imagePreview').classList.add('hidden');
+                convertImagesBtn.disabled = true;
+                convertImagesBtn.textContent = 'Convertir a PDF';
+            } else {
+                showImagePreview(selectedImages);
+                convertImagesBtn.textContent = `Convertir ${selectedImages.length} imagen(es) a PDF`;
+            }
+        }
+
+        function simulatePdfConversion(file) {
+            const progress = document.getElementById('pdfProgress');
+            const progressBar = document.getElementById('pdfProgressBar');
+            const results = document.getElementById('pdfResults');
+            const imageGrid = document.getElementById('pdfImageGrid');
+            
+            progress.classList.remove('hidden');
+            convertPdfBtn.disabled = true;
+            
+            // Simular progreso
+            let progressValue = 0;
+            const progressInterval = setInterval(() => {
+                progressValue += Math.random() * 20;
+                if (progressValue >= 100) {
+                    progressValue = 100;
+                    clearInterval(progressInterval);
+                    
+                    // Mostrar resultados simulados
+                    setTimeout(() => {
+                        progress.classList.add('hidden');
+                        showPdfResults();
+                    }, 500);
+                }
+                progressBar.style.width = progressValue + '%';
+            }, 200);
+        }
+
+        function showPdfResults() {
+            const results = document.getElementById('pdfResults');
+            const imageGrid = document.getElementById('pdfImageGrid');
+            
+            // Simular 3-5 páginas convertidas
+            const pageCount = Math.floor(Math.random() * 3) + 3;
+            imageGrid.innerHTML = '';
+            
+            for (let i = 1; i <= pageCount; i++) {
+                const div = document.createElement('div');
+                div.className = 'relative group';
+                div.innerHTML = `
+                    <div class="bg-gray-100 border-2 border-gray-200 rounded-lg p-4 h-32 flex items-center justify-center">
+                        <div class="text-center">
+                            <svg class="w-8 h-8 text-gray-400 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                            </svg>
+                            <p class="text-xs text-gray-600">Página ${i}</p>
+                        </div>
+                    </div>
+                    <button onclick="downloadImage(${i})" class="absolute top-2 right-2 bg-blue-600 hover:bg-blue-700 text-white text-xs rounded-full w-8 h-8 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                        </svg>
+                    </button>
+                `;
+                imageGrid.appendChild(div);
+            }
+            
+            results.classList.remove('hidden');
+            convertPdfBtn.disabled = false;
+            convertPdfBtn.textContent = 'Convertir PDF a Imágenes';
+        }
+
+        function downloadImage(pageNumber) {
+            // Simular descarga de imagen individual
+            const link = document.createElement('a');
+            link.href = 'data:text/plain;charset=utf-8,Imagen simulada de la página ' + pageNumber;
+            link.download = `pagina_${pageNumber}.png`;
+            link.click();
+            
+            showNotification(`Descargando página ${pageNumber}...`, 'success');
+        }
+
+        // Convertir imágenes a PDF
+        convertImagesBtn.addEventListener('click', () => {
+            if (selectedImages.length === 0) return;
+            
+            const progress = document.getElementById('imagesProgress');
+            const progressBar = document.getElementById('imagesProgressBar');
+            
+            progress.classList.remove('hidden');
+            convertImagesBtn.disabled = true;
+            
+            // Simular progreso
+            let progressValue = 0;
+            const progressInterval = setInterval(() => {
+                progressValue += Math.random() * 15;
+                if (progressValue >= 100) {
+                    progressValue = 100;
+                    clearInterval(progressInterval);
+                    
+                    setTimeout(() => {
+                        progress.classList.add('hidden');
+                        downloadPdf();
+                        convertImagesBtn.disabled = false;
+                    }, 500);
+                }
+                progressBar.style.width = progressValue + '%';
+            }, 300);
+        });
+
+        function downloadPdf() {
+            // Simular descarga de PDF
+            const link = document.createElement('a');
+            link.href = 'data:text/plain;charset=utf-8,PDF generado con ' + selectedImages.length + ' imágenes';
+            link.download = 'documento_convertido.pdf';
+            link.click();
+            
+            showNotification('¡PDF generado exitosamente!', 'success');
+        }
+
+        // Descargar todas las imágenes
+        document.getElementById('downloadAllImages').addEventListener('click', () => {
+            // Simular descarga de ZIP
+            const link = document.createElement('a');
+            link.href = 'data:text/plain;charset=utf-8,Archivo ZIP con todas las imágenes';
+            link.download = 'imagenes_convertidas.zip';
+            link.click();
+            
+            showNotification('Descargando archivo ZIP...', 'success');
+        });
+
+        function showNotification(message, type = 'info') {
+            const notification = document.createElement('div');
+            notification.className = `fixed top-4 right-4 px-6 py-3 rounded-lg text-white font-medium z-50 transform transition-all duration-300 translate-x-full`;
+            
+            if (type === 'success') {
+                notification.classList.add('bg-green-500');
+            } else if (type === 'error') {
+                notification.classList.add('bg-red-500');
+            } else {
+                notification.classList.add('bg-blue-500');
+            }
+            
+            notification.textContent = message;
+            document.body.appendChild(notification);
+            
+            // Animar entrada
+            setTimeout(() => {
+                notification.classList.remove('translate-x-full');
+            }, 100);
+            
+            // Remover después de 3 segundos
+            setTimeout(() => {
+                notification.classList.add('translate-x-full');
+                setTimeout(() => {
+                    document.body.removeChild(notification);
+                }, 300);
+            }, 3000);
+        }
+
+        // Inicializar en modo PDF a Imágenes
+        pdfToImagesBtn.click();
+    </script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'987510dcb7b64f3b',t:'MTc1OTI0OTQxNy4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
